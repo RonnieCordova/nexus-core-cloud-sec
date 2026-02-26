@@ -12,37 +12,27 @@
         <aside class="sidebar">
             <div class="logo">NEXUS<span>CORE</span></div>
             <nav>
-                <div class="nav-item active">
-                    <span class="icon">🛡️</span> Cloud Security
-                </div>
-                <div class="nav-item disabled">
-                    <span class="icon">👥</span> HR & Admin (Próximamente)
-                </div>
-                <div class="nav-item disabled">
-                    <span class="icon">📈</span> Sales Ops (Próximamente)
-                </div>
+                <div class="nav-item active"><span class="icon">🛡️</span> Cloud Security</div>
+                <div class="nav-item disabled"><span class="icon">👥</span> HR & Admin</div>
+                <div class="nav-item disabled"><span class="icon">📈</span> Sales Ops</div>
             </nav>
-            <div class="sidebar-footer">
-                <p>v1.0.0-MVP</p>
-            </div>
+            <div class="sidebar-footer"><p>v1.0.0-MVP</p></div>
         </aside>
 
         <main class="main-content">
             <header class="top-bar">
                 <h2>Cloud Security Agent</h2>
-                <div class="status-indicator">
-                    <span class="dot"></span> Online
-                </div>
+                <div class="status-indicator"><span class="dot"></span> Online</div>
             </header>
 
             <div id="chat-box" class="chat-box">
                 <div class="message system-message">
-                    <div class="bubble">Bienvenido al módulo de Seguridad. Pega una política IAM en JSON para que Nexus la audite o pídeme generar una corrección.</div>
+                    <div class="bubble">Nexus listo. Pega una política IAM en JSON para auditoría.</div>
                 </div>
             </div>
 
             <div class="input-area">
-                <input type="text" id="user-input" placeholder="Analiza este JSON o haz una consulta..." autocomplete="off">
+                <textarea id="user-input" placeholder="Pega aquí tu política de AWS o haz una consulta..." rows="1"></textarea>
                 <button id="send-btn">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                 </button>
