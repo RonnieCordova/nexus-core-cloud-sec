@@ -1,0 +1,23 @@
+* text=auto eol=lf
+
+# Common source/config files must be treated as text
+*.py text
+*.md text
+*.json text
+*.yml text
+*.yaml text
+*.toml text
+*.ini text
+*.sh text
+*.css text
+*.js text
+*.html text
+
+# Typical binary assets
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary

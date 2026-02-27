@@ -1,33 +1,65 @@
 import os
+import json
 from openai import OpenAI
+from services.security_audit_tool import realizar_auditoria_tf, AUDIT_TOOL_DOCS
+from services.github_tool import crear_pull_request_seguridad, GITHUB_TOOL_DOCS
 
-# Inicializo el cliente asegurandome de jalar la key de las variables de entorno por seguridad
-api_key = os.getenv("OPENAI_API_KEY")
+# inicializo cliente de openai
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-if not api_key:
-    raise ValueError("Falta la variable de entorno OPENAI_API_KEY. Revisar el archivo .env")
+def generar_respuesta_openai(prompt: str, system_prompt: str, historial: list = []) -> str:
+    MODELO = "gpt-4o"
+    
+    mensajes = [{"role": "system", "content": system_prompt}]
+    for h in historial[-4:]:
+        mensajes.append(h)
+    mensajes.append({"role": "user", "content": prompt})
 
-client = OpenAI(api_key=api_key)
+    # agrego ambas herramientas al agente
+    herramientas = [
+        {"type": "function", "function": AUDIT_TOOL_DOCS},
+        {"type": "function", "function": GITHUB_TOOL_DOCS}
+    ]
 
-def generar_respuesta(prompt: str, system_prompt: str = "Eres un asistente útil.") -> str:
-    """
-    Le envio el prompt del usuario y el contexto del sistema a OpenAI.
-    Retorna solo el texto de la respuesta.
-    """
     try:
-        response = client.chat.completions.create(
-            model="gpt-4o", # O el modelo que prefiramos usar por costos (ej. gpt-4o-mini)
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.7 # Un balance entre creatividad y coherencia
+        respuesta = client.chat.completions.create(
+            model=MODELO,
+            messages=mensajes,
+            tools=herramientas,
+            temperature=0.2
         )
+
+        msg = respuesta.choices[0].message
         
-        # Extraigo unicamente el texto de la respuesta que me da la API
-        return response.choices[0].message.content
+        if msg.tool_calls:
+            mensajes.append(msg)
+            for call in msg.tool_calls:
+                func_name = call.function.name
+                args = json.loads(call.function.arguments)
+                
+                print(f"--- NEXUS EJECUTANDO: {func_name} ---")
+                
+                # enrutamiento de la accion
+                if func_name == "realizar_auditoria_tf":
+                    resultado = realizar_auditoria_tf(args.get("codigo_terraform"))
+                elif func_name == "crear_pull_request_seguridad":
+                    resultado = crear_pull_request_seguridad(args.get("contenido_corregido"))
+                else:
+                    resultado = "Accion no soportada."
+                
+                mensajes.append({
+                    "tool_call_id": call.id,
+                    "role": "tool",
+                    "name": func_name,
+                    "content": resultado
+                })
+            
+            # segunda pasada con los datos de la funcion
+            final = client.chat.completions.create(model=MODELO, messages=mensajes)
+            return final.choices[0].message.content
         
+        return msg.content
+
     except Exception as e:
-        # Si algo falla con la API, lo atrapo aqui para que no se caiga todo el sistema
-        print(f"Error al conectar con OpenAI: {e}")
-        return "Hubo un error al procesar la solicitud."
+        print(f"Error OpenAI: {e}")
+        return "Nexus detectó un fallo crítico de conexión con el motor principal."
